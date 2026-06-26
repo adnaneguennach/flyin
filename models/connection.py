@@ -15,4 +15,4 @@ class Connection:
         self.max_link_capacity = max_link_capacity
 
     def __repr__(self) -> str:
-        return f"connection({self.zone1.name} <-> {self.zone2.name}, max={self.max_link_capacity})"
+        return f"Connection({self.zone1.name} <-> {self.zone2.name}, max={self.max_link_capacity})"

@@ -24,7 +24,7 @@ class Graph:
     def get_neighbors(self, zone_name: str) -> List[Zone]:
         """return all neighboring zones of a given zone."""
         neighbors: List[Zone] = []
-        for connection in self.connections:
+        for connection in self.connections: #start <-> hub1 <-> hub2 <-> zone3 <-> end 
             if connection.zone1.name == zone_name:
                 neighbors.append(connection.zone2)
             elif connection.zone2.name == zone_name:
@@ -33,3 +33,10 @@ class Graph:
 
     def __repr__(self) -> str:
         return f"Graph(zones={len(self.zones)}, connections={len(self.connections)}, drones={self.nb_drones})"
+
+
+# [connection1, connection2, connection3]
+
+# connection1.zone1 = start;
+# connection1.zone2 = hub1
+# conneciton.max_link_capacity = 1;
