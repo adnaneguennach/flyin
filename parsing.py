@@ -22,7 +22,6 @@ with open("test.txt", "r") as file:
                 break
         
         if dict_flags["nb"] != 0:
-            print("a Waaaaaaaa3 waa3")
             exit()
 
         if "nb_drones" in line and dict_flags["nb"] == 0 :
@@ -44,3 +43,8 @@ with open("test.txt", "r") as file:
             sh = line.split(":")
             name, x, y = sh[1].strip().split()
             print(name, x, y)
+
+
+
+class Parser:
+    def __innit__(self, nbr_drones, )

@@ -29,5 +29,8 @@ class Zone:
         self.max_drones = max_drones
         self.color = color
 
+    def get_name(self) -> str:
+        return self.name
+
     def __repr__(self) -> str:
-        return f"Zone({self.name}, {self.zone_type.value}, max={self.max_drones})"
+        return f"Zone({self.name}, {self.x},{self.y},{self.zone_type.value}, max={self.max_drones})"
