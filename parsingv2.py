@@ -2,7 +2,7 @@ from models.graph import Graph
 from models.connection import Connection
 from typing import List, Dict, Optional
 from models.zone import Zone, ZoneType
-
+import re
 
 class Parser:
     first_line = True
@@ -53,7 +53,8 @@ class Parser:
 
                 if "connection" == key.strip():
                     self.parse_connection(value.strip(), line_num, seen_connections, zones)
-                
+                if "connection" == key.strip() and not end_hub_seen:
+                    raise ValueError(f"missing end")
     
     def parse_nb_drones(self, line : str, line_num : int) -> int:
         try:
@@ -67,10 +68,8 @@ class Parser:
         metadata_dict = dict()
         VALID_KEYS = {"color","max_drones","zone"}
         VALID_ZONE_TYPES = {"normal", "blocked", "restricted", "priority"}
-        metadata_arr = metadata.split(" ")
-        print(metadata_arr)
-        for element in metadata_arr:
-            key, value = element.split("=")
+        pairs_metadata = re.findall(r'(\w+)\s*=\s*(\w+)', metadata)
+        for key, value in pairs_metadata:
             if key not in VALID_KEYS:
                 raise ValueError(f"Line {line_num}: Not a valid key")
             if key == "max_drones" and int(value) < 1:
@@ -78,19 +77,18 @@ class Parser:
             elif key == "zone" and value not in VALID_ZONE_TYPES:
                 raise ValueError(f"Line {line_num}: zone type aint valid")
             metadata_dict[key] = value
-        print(metadata_dict)
+        print(metadata_dict)    
         return metadata_dict
         
 
     def parse_hub(self, line : str, line_num : int, seen_coords : set[tuple[int, int]], names : set[str]) -> Zone:
         line = line.split("#")[0].strip()
-        first_line_split = line.split("[")
-        value_arr = first_line_split[0].split()
+        first_line_split = line.split(maxsplit=3)
+        value_arr = first_line_split[:3]
         if len(value_arr) < 3:
             raise ValueError(f"Line : {line_num} wrong format")
-
         if len(value_arr) == 3:
-            if (len(value_arr) == 3) and not first_line_split[1]:
+            if (len(value_arr) == 3) and len(first_line_split) == 3:
                 name, x, y = value_arr[0], value_arr[1], value_arr[2]
                 if (x,y) in seen_coords:
                     raise ValueError(f"Duplicate Coordinates")
@@ -98,8 +96,11 @@ class Parser:
                     raise ValueError(f"Duplicate Names")
                 names.add(name)
                 seen_coords.add((x,y))
+                zone_type = ZoneType.NORMAL
+                color =  ""
+                max_drones = 1
             else:
-                name, x, y, metadata = value_arr[0], value_arr[1], value_arr[2], first_line_split[1].strip("]")
+                name, x, y, metadata = value_arr[0], value_arr[1], value_arr[2], first_line_split[3].strip("[]")
                 if (x,y) in seen_coords:
                     raise ValueError(f"Duplicate Coordinates")
                 if name in names:
@@ -133,6 +134,7 @@ class Parser:
             print(Connection(zones[zone1], zones[zone2]))
         except KeyError as e:
             raise ValueError(f"Line {line_num}: unknown zone {e}") from None
+
 
 
 file = "test.txt"
