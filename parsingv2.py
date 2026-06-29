@@ -51,10 +51,13 @@ class Parser:
                     zone = self.parse_hub(value.strip(), line_num, seen_coords, names)
                     zones[zone.get_name()] = zone
 
-                if "connection" == key.strip():
-                    self.parse_connection(value.strip(), line_num, seen_connections, zones)
                 if "connection" == key.strip() and not end_hub_seen:
                     raise ValueError(f"missing end")
+
+                if "connection" == key.strip():
+                    self.parse_connection(value.strip(), line_num, seen_connections, zones)
+
+                
     
     def parse_nb_drones(self, line : str, line_num : int) -> int:
         try:
@@ -64,9 +67,9 @@ class Parser:
         except ValueError:
             raise ValueError(f"Line {line_num}")
     
-    def parse_metadata(self, metadata : str, line_num : int) -> Dict:
+    def parse_metadata(self, metadata: str, line_num: int) -> Dict:
         metadata_dict = dict()
-        VALID_KEYS = {"color","max_drones","zone"}
+        VALID_KEYS = {"color", "max_drones", "zone", "max_link_capacity"}
         VALID_ZONE_TYPES = {"normal", "blocked", "restricted", "priority"}
         pairs_metadata = re.findall(r'(\w+)\s*=\s*(\w+)', metadata)
         for key, value in pairs_metadata:
@@ -74,10 +77,9 @@ class Parser:
                 raise ValueError(f"Line {line_num}: Not a valid key")
             if key == "max_drones" and int(value) < 1:
                 raise ValueError(f"Line {line_num}: Max drones need to be positive")
-            elif key == "zone" and value not in VALID_ZONE_TYPES:
+            if key == "zone" and value not in VALID_ZONE_TYPES:
                 raise ValueError(f"Line {line_num}: zone type aint valid")
             metadata_dict[key] = value
-        print(metadata_dict)    
         return metadata_dict
         
 
@@ -125,13 +127,22 @@ class Parser:
             raise ValueError(f"Line {line_num}: wrong formatting")
                 
     def parse_connection(self ,line : str, line_num : int, seen_connections : set[frozenset[str]], zones) -> Connection:
-        zone1, zone2 = line.strip().split("-")
+        line_stripped = line.strip().split()
+        zone1, zone2 = line_stripped[0].strip().split("-")
+        metadata_dict = dict()
+        if len(line_stripped) == 2:
+            metadata = line_stripped[1].strip("[]")
+            metadata_dict = self.parse_metadata(metadata, line_num)
+
         pair = frozenset({zone1, zone2})
         if pair in seen_connections:
             raise ValueError(f"Line {line_num}:Duplicate connection")
         seen_connections.add(pair)
         try:
-            print(Connection(zones[zone1], zones[zone2]))
+            if len(metadata_dict) == 1:
+                Connection(zones[zone1], zones[zone2], metadata_dict["max_link_capacity"])
+            else:
+                Connection(zones[zone1], zones[zone2])
         except KeyError as e:
             raise ValueError(f"Line {line_num}: unknown zone {e}") from None
 

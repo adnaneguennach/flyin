@@ -20,7 +20,8 @@ class Zone:
         y: int,
         zone_type: ZoneType = ZoneType.NORMAL,
         max_drones: int = 1,
-        color: str = ""
+        color: str = "",
+        max_drones_set=False
     ) -> None:
         self.name = name
         self.x = x
@@ -28,6 +29,7 @@ class Zone:
         self.zone_type = zone_type
         self.max_drones = max_drones
         self.color = color
+        self.max_drones_set = max_drones_set
 
     def get_name(self) -> str:
         return self.name
